@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conectar TikTok — Robi & Chispa</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:680px;margin:40px auto;padding:0 16px;line-height:1.6;color:#222}
+input{width:100%;padding:10px;font-size:1em;box-sizing:border-box;margin:6px 0 12px}
+button{background:#fe2c55;color:#fff;border:0;border-radius:8px;padding:12px 18px;font-size:1em;cursor:pointer}
+.codigo{background:#f4f0fb;border:2px dashed #6a3fb5;padding:14px;word-break:break-all;font-family:monospace;font-size:1.05em}
+.ok{color:#137a3a}.err{color:#b00020}
+</style></head><body>
+<h1>Conectar TikTok</h1>
+<div id="paso1">
+<p>1. Pega aquí el <b>Client key</b> de la app (developers.tiktok.com → tu app → Credentials). No es secreto. <b>No pegues el Client secret.</b></p>
+<input id="ck" placeholder="Client key" autocomplete="off">
+<button onclick="ir()">Conectar con TikTok</button>
+<p>2. TikTok te pedirá iniciar sesión con <b>@robiychispita</b> y autorizar. Luego vuelves aquí con un código.</p>
+</div>
+<div id="paso2" hidden>
+<p class="ok"><b>¡Listo! Este es tu código</b> (vence en pocos minutos, úsalo ya):</p>
+<div class="codigo" id="code"></div>
+<p><button onclick="copiar()">Copiar código</button> <span id="copiado"></span></p>
+<p>Ahora en GitHub: <b>Actions → Conectar TikTok → Run workflow</b>, pega el código y pulsa <b>Run workflow</b>.</p>
+</div>
+<p class="err" id="error"></p>
+<script>
+const URI = location.origin + location.pathname;
+function ir(){
+  const ck = document.getElementById('ck').value.trim();
+  if(!ck){document.getElementById('error').textContent='Falta el Client key';return;}
+  const st = Math.random().toString(36).slice(2);
+  try{sessionStorage.setItem('tt_state', st);}catch(e){}
+  const p = new URLSearchParams({client_key:ck, scope:'user.info.basic,video.publish,video.upload',
+    response_type:'code', redirect_uri:URI, state:st});
+  location.href = 'https://www.tiktok.com/v2/auth/authorize/?' + p.toString();
+}
+const q = new URLSearchParams(location.search);
+if(q.get('code')){
+  document.getElementById('paso1').hidden = true;
+  document.getElementById('paso2').hidden = false;
+  document.getElementById('code').textContent = q.get('code');
+} else if(q.get('error')){
+  document.getElementById('error').textContent = 'TikTok respondió: ' + q.get('error') + ' ' + (q.get('error_description')||'');
+}
+function copiar(){navigator.clipboard.writeText(document.getElementById('code').textContent)
+  .then(()=>document.getElementById('copiado').textContent='Copiado ✔');}
+</script>
+</body></html>
